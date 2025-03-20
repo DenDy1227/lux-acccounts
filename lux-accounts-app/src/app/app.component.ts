@@ -17,6 +17,7 @@ import {MatIconButton} from "@angular/material/button";
 import {ACCOUNTS} from "./source/accounts";
 import {MatTableModule} from "@angular/material/table";
 import {accTransformed} from "./source/thransformedAccounts";
+import {GetClassColorPipe} from "./utils/get-class-color.pipe";
 
 
 const FIELD_NAMES = {
@@ -41,7 +42,7 @@ interface FlattenedData {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, MatTableModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, ReactiveFormsModule, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton],
+  imports: [RouterOutlet, MatTableModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, ReactiveFormsModule, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton, GetClassColorPipe],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
