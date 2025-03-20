@@ -20,7 +20,7 @@
             "outputPath": "dist/lux-accounts-app",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "baseHref": "/lux-accounts/",
+            "baseHref": "/lux-acccounts/",
             "polyfills": [
               "zone.js"
             ],
