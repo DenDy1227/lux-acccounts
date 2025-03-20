@@ -17,10 +17,10 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/lux-accounts-app/browser",
+            "outputPath": "dist/lux-accounts-app",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "baseHref": "/lux-accounts/browser/",
+            "baseHref": "/lux-accounts/",
             "polyfills": [
               "zone.js"
             ],
