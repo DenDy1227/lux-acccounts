@@ -17,8 +17,8 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "/dist/lux-accounts-app/browser/",
-            "baseHref": "/<lux-accounts>/browser/",
+            "outputPath": "/dist/lux-accounts-app.",
+            "baseHref": "/lux-accounts/",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
