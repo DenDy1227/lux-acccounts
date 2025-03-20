@@ -56,6 +56,7 @@
     width: 100%;
     min-height: 100%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 1rem;
@@ -69,6 +70,7 @@
 
   .content {
     display: flex;
+
     justify-content: space-around;
     width: 100%;
     max-width: 700px;
@@ -171,49 +173,93 @@
 <main class="main">
   <div class="content">
     <div class="left-side">
-      <form [formGroup]="accountsFilterForm">
-<!--        <mat-form-field appearance="fill">-->
-<!--          <mat-label>Account name search</mat-label>-->
-<!--          <input [formControlName]="formControlName.DESCRIPTION" matInput placeholder="Type account name">-->
-<!--          <mat-icon matSuffix>search</mat-icon>-->
+<!--      <div class="form-field">-->
+<!--        <mat-form-field class="example-full-width" appearance="fill">-->
+<!--          <mat-label>Class</mat-label>-->
+<!--          <mat-icon matPrefix>search</mat-icon>-->
+<!--          <input type="text"-->
+<!--                 placeholder="Type class name"-->
+<!--                 aria-label="Class name"-->
+<!--                 matInput-->
+<!--                 [formControl]="classControl"-->
+<!--                 [matAutocomplete]="className">-->
+
+<!--          <mat-autocomplete #className="matAutocomplete"-->
+<!--                            [displayWith]="displayClassFn"-->
+<!--                            (optionSelected)="onClassSelection($event)">-->
+<!--            <mat-option *ngFor="let option of filteredClassOptions | async" [value]="option">-->
+<!--              {{option.value}} - {{option.label}}-->
+<!--            </mat-option>-->
+<!--          </mat-autocomplete>-->
+
+<!--          <mat-icon *ngIf="classControl.value" matSuffix color="warn"-->
+<!--                    (click)="classControl.setValue('')">close</mat-icon>-->
 <!--        </mat-form-field>-->
+<!--      </div>-->
 
+<!--      <div class="form-field">-->
+<!--        <mat-form-field appearance="fill">-->
+<!--          <mat-label>SubClass</mat-label>-->
+<!--          <mat-icon matPrefix>search</mat-icon>-->
+<!--          <input type="text"-->
+<!--                 placeholder="Type sub class name"-->
+<!--                 aria-label="Sub Class name"-->
+<!--                 matInput-->
+<!--                 [formControl]="subClassControl"-->
+<!--                 [matAutocomplete]="subclassName">-->
 
-        <div class="form-field">
-          <mat-form-field class="example-full-width" appearance="fill">
-            <mat-label>Class</mat-label>
-            <mat-icon matPrefix>search</mat-icon>
-            <input type="text"
-                   placeholder="Type class name"
-                   aria-label="Class name"
-                   matInput
-                   [formControl]="classControl"
-                   [matAutocomplete]="className">
+<!--          <mat-autocomplete #subclassName="matAutocomplete"-->
+<!--                            [displayWith]="displayClassFn"-->
+<!--                            (optionSelected)="onSubClassSelection($event)">-->
+<!--            <mat-option *ngFor="let option of filteredSubClassOptions | async" [value]="option">-->
+<!--              {{option.value}} - {{option.label}}-->
+<!--            </mat-option>-->
+<!--          </mat-autocomplete>-->
 
-            <mat-autocomplete #className="matAutocomplete" [displayWith]="displayClassFn" (optionSelected)="onClassSelection($event)">
-              @for (option of filteredClassOptions | async; track option) {
-                <mat-option [value]="option">{{option}}</mat-option>
-              }
-            </mat-autocomplete>
-            @if (this.getFormFieldValue(formControlName.CLASS_DESCRIPTION)){
-              <mat-icon matSuffix color="warn" (click)="this.clearFormField(formControlName.CLASS_DESCRIPTION)">close</mat-icon>
-            }
-          </mat-form-field>
+<!--          <mat-icon *ngIf="subClassControl.value" matSuffix color="warn"-->
+<!--                    (click)="subClassControl.setValue('')">close</mat-icon>-->
+<!--        </mat-form-field>-->
+<!--      </div>-->
+<!--        <div class="form-field">-->
+<!--          <mat-form-field class="example-full-width" appearance="fill">-->
+<!--            <mat-label>Class</mat-label>-->
+<!--            <mat-icon matPrefix>search</mat-icon>-->
+<!--            <input type="text"-->
+<!--                   placeholder="Type class name"-->
+<!--                   aria-label="Class name"-->
+<!--                   matInput-->
+<!--                   [formControl]="classControl"-->
+<!--                   [matAutocomplete]="className">-->
 
-        </div>
+<!--            <mat-autocomplete #className="matAutocomplete"-->
+<!--                              [displayWith]="displayClassFn"-->
+<!--                              (optionSelected)="onClassSelection($event)">-->
+<!--              @for (option of filteredClassOptions | async; track option) {-->
+<!--                <mat-option [value]="option">{{option.value}} - {{option.label}}</mat-option>-->
+<!--              }-->
+<!--            </mat-autocomplete>-->
+<!--            @if (this.getFormFieldValue(formControlName.CLASS_DESCRIPTION)){-->
+<!--              <mat-icon matSuffix color="warn"-->
+<!--                        (click)="this.clearFormField(formControlName.CLASS_DESCRIPTION)">close</mat-icon>-->
+<!--            }-->
+<!--          </mat-form-field>-->
+
+<!--        </div>-->
         <div class="form-field">
           <mat-form-field appearance="fill">
-            <mat-label>SubClass</mat-label>
+            <mat-label>SubClass description</mat-label>
             <mat-icon matPrefix>search</mat-icon>
             <input type="text"
-                   placeholder="Type sub class name"
-                   aria-label="Sub Class name"
+                   placeholder="Type sub class description"
+                   aria-label="Sub Class description"
                    matInput
                    [formControl]="subClassControl"
                    [matAutocomplete]="subclassName">
-            <mat-autocomplete #subclassName="matAutocomplete" [displayWith]="displaySubClassFn" (optionSelected)="onSubClassSelection($event)">
+            <mat-autocomplete #subclassName="matAutocomplete"
+                              [displayWith]="displayClassFn"
+                              (optionSelected)="onSubClassSelection($event)">
               @for (option of filteredSubClassOptions | async; track option) {
-                <mat-option [value]="option">{{option}}</mat-option>
+                <mat-option [value]="option">{{option.value}} - {{option.label}}</mat-option>
               }
             </mat-autocomplete>
 
@@ -224,47 +270,101 @@
           </mat-form-field>
 
         </div>
-        <div class="form-field">
-          <mat-form-field class="example-full-width" appearance="fill">
-            <mat-label>Account number search</mat-label>
-            <mat-icon matPrefix>search</mat-icon>
-            <input type="number"
-                   placeholder="Type account number"
-                   aria-label="Account number"
-                   matInput
-                   [formControlName]="formControlName.ACCOUNT_NUMBER">
-            @if (this.getFormFieldValue(formControlName.DESCRIPTION)){
-              <mat-icon matSuffix color="warn" (click)="this.clearFormField(formControlName.DESCRIPTION)">close</mat-icon>
-            }
-          </mat-form-field>
-        </div>
-        <div class="form-field">
-          <mat-form-field class="example-full-width" appearance="fill">
-            <mat-label>Account name search</mat-label>
-            <mat-icon matPrefix>search</mat-icon>
-            <input type="text"
-                   placeholder="Type account name"
-                   aria-label="Account"
-                   matInput
-                   [formControl]="searchControl"
-                   [matAutocomplete]="auto">
-            <mat-autocomplete #auto="matAutocomplete">
-              @for (option of filteredSearchResults | async; track option) {
-                <mat-option [value]="option">{{option}}</mat-option>
-              }
-            </mat-autocomplete>
-            @if (this.getFormFieldValue(formControlName.DESCRIPTION)){
-              <mat-icon matSuffix color="warn" (click)="this.clearFormField(formControlName.DESCRIPTION)">close</mat-icon>
-            }
-          </mat-form-field>
-        </div>
-      </form>
+            <div class="form-field">
+              <mat-form-field appearance="fill">
+                <mat-label>Class description</mat-label>
+                <mat-icon matPrefix>search</mat-icon>
+                <input type="text"
+                       placeholder="Type class description"
+                       aria-label="Class description"
+                       matInput
+                       [formControl]="classControl"
+                       [matAutocomplete]="className">
 
+                <mat-autocomplete #className="matAutocomplete"
+                                  (optionSelected)="onClassSelection($event)">
+                  @for (option of filteredClassOptions | async; track option) {
+                    <mat-option [value]="option">{{option.value}} - {{option.label}}</mat-option>
+                  }
+                </mat-autocomplete>
+
+                @if (getFormFieldValue(formControlName.CLASS_DESCRIPTION)) {
+                  <mat-icon matSuffix color="warn"
+                            (click)="clearFormField(formControlName.CLASS_DESCRIPTION)">close</mat-icon>
+                }
+              </mat-form-field>
+            </div>
+      <div class="form-field">
+        <mat-form-field appearance="fill">
+          <mat-label>Account description</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input type="text"
+                 placeholder="Type account description"
+                 aria-label="Account description"
+                 matInput
+                 [formControl]="accControl">
+
+          @if (getFormFieldValue(formControlName.DESCRIPTION)) {
+            <mat-icon matSuffix color="warn"
+                      (click)="clearFormField(formControlName.DESCRIPTION)">close</mat-icon>
+          }
+        </mat-form-field>
+      </div>
     </div>
     <div class="divider" role="separator" aria-label="Divider"></div>
     <div class="right-side">
     </div>
   </div>
+  <table mat-table [dataSource]="flattenedDataSource" class="mat-elevation-z8">
+
+    <!-- Class Number Column -->
+    <ng-container matColumnDef="classNumber">
+      <th mat-header-cell *matHeaderCellDef> Class Number </th>
+      <td mat-cell *matCellDef="let element"> {{ element.classNumber }} </td>
+    </ng-container>
+
+    <!-- Class Description Column -->
+    <ng-container matColumnDef="classDescription">
+      <th mat-header-cell *matHeaderCellDef> Class Description (EN/FR) </th>
+      <td mat-cell *matCellDef="let element">
+        {{ element?.classDescription?.en }} / {{ element?.classDescription?.fr }}
+      </td>
+    </ng-container>
+
+    <!-- Subclass Number Column -->
+    <ng-container matColumnDef="subclassNumber">
+      <th mat-header-cell *matHeaderCellDef> Subclass Number </th>
+      <td mat-cell *matCellDef="let element"> {{ element.subclassNumber }} </td>
+    </ng-container>
+
+    <!-- Subclass Description Column -->
+    <ng-container matColumnDef="subclassDescription">
+      <th mat-header-cell *matHeaderCellDef> Subclass Description (EN/FR) </th>
+      <td mat-cell *matCellDef="let element">
+        {{ element?.subclassDescription?.en || 'N/A' }} / {{ element?.subclassDescription?.fr || 'N/A' }}
+      </td>
+    </ng-container>
+
+    <!-- Account Number Column -->
+    <ng-container matColumnDef="accountNumber">
+      <th mat-header-cell *matHeaderCellDef> Account Number </th>
+      <td mat-cell *matCellDef="let element"> {{ element.accountNumber }} </td>
+    </ng-container>
+
+    <!-- Account Description Column -->
+    <ng-container matColumnDef="accountDescription">
+      <th mat-header-cell *matHeaderCellDef> Account Description (EN/FR) </th>
+      <td mat-cell *matCellDef="let element">
+        {{ element?.accountDescription?.en }} / {{ element?.accountDescription?.fr }}
+      </td>
+    </ng-container>
+
+    <!-- Table Header and Rows -->
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+  </table>
 </main>
+
 
 <router-outlet />
