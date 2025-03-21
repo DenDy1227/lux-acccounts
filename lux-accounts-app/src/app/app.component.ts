@@ -1,11 +1,11 @@
-import {ChangeDetectorRef, Component, DestroyRef, HostListener, inject, OnInit, ViewChild} from '@angular/core';
-import {ActivatedRoute, Params, Router, RouterOutlet} from '@angular/router';
+import {Component, HostListener, OnInit, ViewChild} from '@angular/core';
+import {RouterOutlet} from '@angular/router';
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInput} from "@angular/material/input";
-import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-import {filter, map, Observable, of, startWith, take, tap, throttleTime} from "rxjs";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
+import {FormControl, ReactiveFormsModule} from "@angular/forms";
+import {map, Observable, startWith, throttleTime} from "rxjs";
+
 import {
   MatAutocomplete,
   MatAutocompleteSelectedEvent,
@@ -14,26 +14,13 @@ import {
 } from "@angular/material/autocomplete";
 import {CommonModule} from "@angular/common";
 import {MatFabButton, MatIconButton} from "@angular/material/button";
-import {ACCOUNTS} from "./source/accounts";
 import {MatTableDataSource, MatTableModule} from "@angular/material/table";
-import {accTransformed} from "./source/thransformedAccounts";
 import {GetClassColorPipe} from "./utils/get-class-color.pipe";
 import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
-import { FileService } from './service/downloadService';
-
-import {HttpClientModule} from "@angular/common/http";
 
 import {ACCOUNTS_F} from "./source/flatSource";
-
-const FIELD_NAMES = {
-  CLASS_DESCRIPTION: 'classDescription',
-  CLASS_NUMBER: 'classNumber',
-  SUBCLASS_DESCRIPTION: 'subclassDescription',
-  SUBCLASS_NUMBER: 'subclassNumber',
-  DESCRIPTION: 'description',
-  ACCOUNT_NUMBER: 'accountNumber',
-
-} as const
+import {subClassOptions} from "./source/subClassOptions";
+import {classOption} from "./source/classOptions";
 
 interface Option {
   value: string;
@@ -52,32 +39,26 @@ interface FlattenedData {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [HttpClientModule,RouterOutlet, MatTableModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, ReactiveFormsModule, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton, GetClassColorPipe, MatFabButton],
+  imports: [RouterOutlet, MatTableModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton, GetClassColorPipe, MatFabButton, ReactiveFormsModule, MatPaginatorModule, MatPaginator],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  providers:[FileService]
 })
 export class AppComponent implements OnInit {
-  public accountsFilterForm: FormGroup;
-  public formControlName = FIELD_NAMES;
-
   classControl = new FormControl('');
   searchControl = new FormControl('');
   subClassControl = new FormControl('');
   accControl = new FormControl('');
 
-  public storedV = accTransformed;
-  classOptions: { value: string, label: string }[] = this.getClassOptions();
-  subclassOptions: { value: string, label: string }[] = this.getSubclassOptions();
+  classOptions: { value: string, label: string }[] = classOption;
+  subclassOptions: { value: string, label: string }[] = subClassOptions;
 
   filteredClassOptions!: Observable<{ value: string, label: string }[]>;
   filteredSubClassOptions!: Observable<{ value: string, label: string }[]>;
   filteredSearchResults!: Observable<string[]>;
 
-  private fb = inject(FormBuilder);
-  private destroyRef = inject(DestroyRef);
-  filteredTableData: FlattenedData[] = [];
-  // flattenedDataSource:FlattenedData[] = [];
+  // private fb = inject(FormBuilder);
+  // private destroyRef = inject(DestroyRef);
+
   flattenedTableDataSource = new MatTableDataSource<FlattenedData,MatPaginator>([]);
   displayedColumns: string[] = [
     'classNumber',
@@ -87,14 +68,11 @@ export class AppComponent implements OnInit {
     'accountNumber',
     'accountDescription'
   ];
-  dataSource = ACCOUNTS;
 
-
-  showScrollButton = false; // Controls when the button appears
+  public showScrollButton = false; // Controls when the button appears
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
-    // Show button when scrolled down 300px
     this.showScrollButton = window.scrollY > 300;
   }
 
@@ -103,17 +81,6 @@ export class AppComponent implements OnInit {
   }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-
-  constructor(private fileService: FileService) {
-    this.accountsFilterForm = this.fb.group({
-      [FIELD_NAMES.CLASS_DESCRIPTION]: [null],
-      [FIELD_NAMES.SUBCLASS_DESCRIPTION]: [null],
-      [FIELD_NAMES.DESCRIPTION]: [null],
-      [FIELD_NAMES.ACCOUNT_NUMBER]: [null],
-      [FIELD_NAMES.CLASS_NUMBER]: [null],
-      [FIELD_NAMES.SUBCLASS_NUMBER]: [null],
-    });
-  }
 
   ngOnInit(): void {
     this.initializeFilters();
@@ -187,6 +154,9 @@ export class AppComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.flattenedTableDataSource.paginator = this.paginator;
+  }
 
   /** ============================
    * 🔹 Unified Filter Logic
@@ -225,9 +195,6 @@ export class AppComponent implements OnInit {
 
   updateFilter(newFilter: Partial<{ class: string; subClass: string; acc: string }>): void {
     const mergedFilter = JSON.stringify({ ...newFilter });
-
-    console.log('Assigned Filter Value:', mergedFilter);
-
     this.flattenedTableDataSource.filter = mergedFilter;
   }
 
@@ -250,21 +217,13 @@ export class AppComponent implements OnInit {
     return typeof value === 'object' ? `${value.value} - ${value.label}`:'';
   }
 
-  clearFormField(fieldName: string, emitEvent: boolean = true): void {
-    this.accountsFilterForm.get(fieldName)?.setValue(null, {emitEvent});
-  }
-
-  getFormFieldValue(fieldName: string): string | null {
-    return this.accountsFilterForm.get(fieldName)?.value;
-  }
-
   public onClassSelection(selectClassEvent: MatAutocompleteSelectedEvent): void {
-    this.accountsFilterForm.get(FIELD_NAMES.CLASS_DESCRIPTION)?.setValue(selectClassEvent.option.value.value)
-    this.subclassOptions = this.getSubclassOptions(selectClassEvent.option.value.value);
+    // this.accountsFilterForm.get(FIELD_NAMES.CLASS_DESCRIPTION)?.setValue(selectClassEvent.option.value.value)
+    // this.subclassOptions = this.getSubclassOptions(selectClassEvent.option.value.value);
   }
-
+  //
   public onSubClassSelection(selectClassEvent: MatAutocompleteSelectedEvent): void {
-    this.accountsFilterForm.get(FIELD_NAMES.SUBCLASS_DESCRIPTION)?.setValue(selectClassEvent.option.value.value)
+    // this.accountsFilterForm.get(FIELD_NAMES.SUBCLASS_DESCRIPTION)?.setValue(selectClassEvent.option.value.value)
   }
 
   private _filter(source: { value: string, label: string }[], value: string | null | {
@@ -280,41 +239,11 @@ export class AppComponent implements OnInit {
     );
   }
 
-  getClassOptions(): { value: string, label: string }[] {
-    return Object.keys(this.storedV.classes).map((classId) => ({
-      value: classId,
-      // @ts-ignore
-      label: this.storedV.classes[classId.toString()]?.classDescription?.en, // ✅ No more error!
-    }));
-  }
-
   loadData(): void {
     this.flattenedTableDataSource = new MatTableDataSource<FlattenedData>(ACCOUNTS_F as FlattenedData[]);
   }
 
-
-  getSubclassOptions(classId?: string): { value: string, label: string }[] {
-    if (!classId) {
-      const subKeys = Object.keys(this.storedV.subclasses).filter(id => id!=='undefined' && id!==null);
-      return subKeys.map((subclassId) => ({
-        value: subclassId,
-        // @ts-ignore
-        label: this.storedV.subclasses[subclassId.toString()].subclassDescription?.en, // ✅ No more error!
-      }));
-    } else {
-      // @ts-ignore
-      const classData = this.storedV.classes[classId];
-      if (!classData) return [];
-      // @ts-ignore
-      return classData.subclassIds.filter(id => id!==null).map(subclassId => ({
-        value: subclassId,
-        // @ts-ignore
-        label: this.storedV.subclasses[subclassId]?.subclassDescription.en || "Unknown"
-      }));
-    }
-  }
-
-  // saveFlattenedDataToFile(staticFlattenedData: FlattenedData[]): void {
+  // saveFlattenedDataToFile(staticFlattenedData: any[]): void {
   //   this.fileService.saveAsJsonFile(staticFlattenedData, 'flattenedData.json');
   // }
 }

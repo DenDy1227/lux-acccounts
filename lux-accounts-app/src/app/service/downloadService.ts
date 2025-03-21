@@ -6,7 +6,7 @@ import {HttpClient} from "@angular/common/http";
   providedIn: 'root'
 })
 export class FileService {
-http = inject(HttpClient)
+// http = inject(HttpClient)
   /**
    * Save data as a JSON file
    */
@@ -25,8 +25,8 @@ http = inject(HttpClient)
     URL.revokeObjectURL(url);  // Clean up URL object
   }
 
-  getData(): Observable<any[]> {
-    // return this.http.get<any[]>('./../../../assets/flatSource.ts');
-    return this.http.get<any[]>('assets/flatSource.ts');
-  }
+  // getData(): Observable<any[]> {
+  //   // return this.http.get<any[]>('./../../../assets/flatSource.ts');
+  //   return this.http.get<any[]>('assets/flatSource.ts');
+  // }
 }
