@@ -1,4 +1,4 @@
-import {Component, HostListener, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {RouterOutlet} from '@angular/router';
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
@@ -45,7 +45,6 @@ interface FlattenedData {
 })
 export class AppComponent implements OnInit {
   classControl = new FormControl('');
-  searchControl = new FormControl('');
   subClassControl = new FormControl('');
   accControl = new FormControl('');
 
@@ -54,9 +53,7 @@ export class AppComponent implements OnInit {
 
   filteredClassOptions!: Observable<{ value: string, label: string }[]>;
   filteredSubClassOptions!: Observable<{ value: string, label: string }[]>;
-  filteredSearchResults!: Observable<string[]>;
 
-  // private fb = inject(FormBuilder);
   // private destroyRef = inject(DestroyRef);
 
   flattenedTableDataSource = new MatTableDataSource<FlattenedData,MatPaginator>([]);
@@ -68,17 +65,6 @@ export class AppComponent implements OnInit {
     'accountNumber',
     'accountDescription'
   ];
-
-  public showScrollButton = false; // Controls when the button appears
-
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    this.showScrollButton = window.scrollY > 300;
-  }
-
-  scrollToTop(): void {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
