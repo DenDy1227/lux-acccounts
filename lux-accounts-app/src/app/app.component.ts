@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, DestroyRef, HostListener, inject, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute, Params, Router, RouterOutlet} from '@angular/router';
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
@@ -13,11 +13,12 @@ import {
   MatOption
 } from "@angular/material/autocomplete";
 import {CommonModule} from "@angular/common";
-import {MatIconButton} from "@angular/material/button";
+import {MatFabButton, MatIconButton} from "@angular/material/button";
 import {ACCOUNTS} from "./source/accounts";
-import {MatTableModule} from "@angular/material/table";
+import {MatTableDataSource, MatTableModule} from "@angular/material/table";
 import {accTransformed} from "./source/thransformedAccounts";
 import {GetClassColorPipe} from "./utils/get-class-color.pipe";
+import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
 
 
 const FIELD_NAMES = {
@@ -42,7 +43,7 @@ interface FlattenedData {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, MatTableModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, ReactiveFormsModule, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton, GetClassColorPipe],
+  imports: [RouterOutlet, MatTableModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, ReactiveFormsModule, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton, GetClassColorPipe, MatFabButton],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -76,7 +77,21 @@ export class AppComponent implements OnInit {
     'accountDescription'
   ];
   dataSource = ACCOUNTS;
-  flattenedDataSource: FlattenedData[] = [];
+  flattenedDataSource:FlattenedData[] = [];
+
+  showScrollButton = false; // Controls when the button appears
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    // Show button when scrolled down 300px
+    this.showScrollButton = window.scrollY > 300;
+  }
+
+  scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor() {
     this.accountsFilterForm = this.fb.group({
@@ -104,34 +119,47 @@ export class AppComponent implements OnInit {
 
     this.classControl
       ?.valueChanges.subscribe((searchedString) => {
-      console.log(this.flattenedDataSource.length)
       // @ts-ignore
       let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
       this.flattenedDataSource = this.flattenedDataSource.filter(td =>
         td.classDescription.en.toLowerCase().includes(searchParam?.toLowerCase() ?? '')
         || td.classDescription.fr.toLowerCase().includes(searchParam?.toLowerCase() ?? ''))
-      console.log(this.flattenedDataSource.length)
     })
+
+    this.classControl?.valueChanges.subscribe((searchedString) => {
+      // Ensure search term is handled correctly
+      //@ts-ignore
+      const searchParam = typeof searchedString === 'object' ? searchedString?.label : searchedString;
+
+      // Apply filter logic directly on MatTableDataSource
+      this.flattenedDataSource.filter = searchParam?.trim().toLowerCase() ?? '';
+    });
 
     this.subClassControl
       ?.valueChanges.subscribe((searchedString) => {
-      console.log(this.flattenedDataSource.length)
       // @ts-ignore
       let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
 
       this.flattenedDataSource = this.flattenedDataSource.filter(td =>
         td.subclassDescription.en.toLowerCase().includes(searchParam?.toLowerCase() ?? '')
         || td.subclassDescription.fr.toLowerCase().includes(searchParam?.toLowerCase() ?? ''))
-      console.log(this.flattenedDataSource.length)
     })
 
+    // this.subClassControl?.valueChanges.subscribe((searchedString) => {
+    //   // @ts-ignore
+    //   const searchParam = typeof searchedString === 'object' ? searchedString?.label : searchedString;
+    //   this.updateFilter({ subClass: searchParam });
+    // });
+
     this.accControl.valueChanges.subscribe((accName) => {
-      console.log(accName, 'accbn')
       this.flattenedDataSource = this.flattenedDataSource.filter(td =>
         td.subclassDescription.en.toLowerCase().includes(accName?.toLowerCase() ?? '')
         || td.subclassDescription.fr.toLowerCase().includes(accName?.toLowerCase() ?? ''))
-      console.log(this.flattenedDataSource.length)
     })
+
+    // this.accControl?.valueChanges.subscribe((accName) => {
+    //   this.updateFilter({ acc: accName ?? '' });
+    // });
   }
 
   displayClassFn(value: { value: string, label: string }): string {
@@ -194,7 +222,6 @@ export class AppComponent implements OnInit {
   getSubclassOptions(classId?: string): { value: string, label: string }[] {
     if (!classId) {
       const subKeys = Object.keys(this.storedV.subclasses).filter(id => id!=='undefined' && id!==null);
-      console.log(subKeys, 'SUB');
       return subKeys.map((subclassId) => ({
         value: subclassId,
         // @ts-ignore

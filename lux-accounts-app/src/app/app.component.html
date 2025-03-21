@@ -30,7 +30,7 @@
 
   .content {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 8px;
     justify-content: space-around;
     width: 100%;
@@ -136,56 +136,75 @@
 
   </div>
   <span>Elements found: <strong>{{flattenedDataSource.length}}</strong></span>
-  <table mat-table [dataSource]="flattenedDataSource" class="mat-elevation-z8">
+  <div class="table-container">
+    <table mat-table [dataSource]="flattenedDataSource" class="mat-elevation-z8 mat-responsive-table">
 
-    <!-- Class Number Column -->
-    <ng-container matColumnDef="classNumber">
-      <th mat-header-cell *matHeaderCellDef> Class Number</th>
-      <td mat-cell *matCellDef="let element" [class]="element.classNumber | getClassColor">
-        <strong>{{ element.classNumber }}</strong></td>
-    </ng-container>
+      <!-- Class Number Column -->
+      <ng-container matColumnDef="classNumber">
+        <th mat-header-cell *matHeaderCellDef> Class Number</th>
+        <td mat-cell *matCellDef="let element" [class]="element.classNumber | getClassColor">
+          <strong>{{ element.classNumber }}</strong>
+        </td>
+      </ng-container>
 
-    <!-- Class Description Column -->
-    <ng-container matColumnDef="classDescription">
-      <th mat-header-cell *matHeaderCellDef> Class Description (EN/FR)</th>
-      <td mat-cell *matCellDef="let element">
-        {{ element?.classDescription?.en }} / {{ element?.classDescription?.fr }}
-      </td>
-    </ng-container>
+      <!-- Class Description Column -->
+      <ng-container matColumnDef="classDescription">
+        <th mat-header-cell *matHeaderCellDef> Class Description (EN/FR)</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element?.classDescription?.en }} / {{ element?.classDescription?.fr }}
+        </td>
+      </ng-container>
 
-    <!-- Subclass Number Column -->
-    <ng-container matColumnDef="subclassNumber">
-      <th mat-header-cell *matHeaderCellDef> Subclass Number</th>
-      <td mat-cell *matCellDef="let element"> {{ element.subclassNumber }}</td>
-    </ng-container>
+      <!-- Subclass Number Column -->
+      <ng-container matColumnDef="subclassNumber">
+        <th mat-header-cell *matHeaderCellDef> Subclass Number</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.subclassNumber }}
+        </td>
+      </ng-container>
 
-    <!-- Subclass Description Column -->
-    <ng-container matColumnDef="subclassDescription">
-      <th mat-header-cell *matHeaderCellDef> Subclass Description (EN/FR)</th>
-      <td mat-cell *matCellDef="let element">
-        {{ element?.subclassDescription?.en || 'N/A' }} / {{ element?.subclassDescription?.fr || 'N/A' }}
-      </td>
-    </ng-container>
+      <!-- Subclass Description Column -->
+      <ng-container matColumnDef="subclassDescription">
+        <th mat-header-cell *matHeaderCellDef> Subclass Description (EN/FR)</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element?.subclassDescription?.en || 'N/A' }} / {{ element?.subclassDescription?.fr || 'N/A' }}
+        </td>
+      </ng-container>
 
-    <!-- Account Number Column -->
-    <ng-container matColumnDef="accountNumber">
-      <th mat-header-cell *matHeaderCellDef> Account Number</th>
-      <td mat-cell *matCellDef="let element"> {{ element.accountNumber }}</td>
-    </ng-container>
+      <!-- Account Number Column -->
+      <ng-container matColumnDef="accountNumber">
+        <th mat-header-cell *matHeaderCellDef> Account Number</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.accountNumber }}
+        </td>
+      </ng-container>
 
-    <!-- Account Description Column -->
-    <ng-container matColumnDef="accountDescription">
-      <th mat-header-cell *matHeaderCellDef> Account Description (EN/FR)</th>
-      <td mat-cell *matCellDef="let element">
-        {{ element?.accountDescription?.en }} / {{ element?.accountDescription?.fr }}
-      </td>
-    </ng-container>
+      <!-- Account Description Column -->
+      <ng-container matColumnDef="accountDescription">
+        <th mat-header-cell *matHeaderCellDef> Account Description (EN/FR)</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element?.accountDescription?.en }} / {{ element?.accountDescription?.fr }}
+        </td>
+      </ng-container>
 
-    <!-- Table Header and Rows -->
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      <!-- Table Header and Rows -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 
-  </table>
+    </table>
+<!--    <mat-paginator-->
+<!--      [pageSize]="5"-->
+<!--      [pageSizeOptions]="[5, 10, 20]"-->
+<!--      showFirstLastButtons-->
+<!--    ></mat-paginator>-->
+    <button mat-fab
+            class="scroll-to-top"
+            (click)="scrollToTop()"
+            *ngIf="showScrollButton">
+      ⬆️
+    </button>
+  </div>
+
 </main>
 
 <router-outlet/>
