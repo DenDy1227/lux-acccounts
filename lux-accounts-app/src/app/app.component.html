@@ -66,6 +66,33 @@
 <main class="main">
   <div class="content">
 
+    <div class="form-field">
+      <mat-form-field appearance="fill">
+        <mat-label>Class description</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input type="text"
+               placeholder="Type class description"
+               aria-label="Class description"
+               matInput
+               [formControl]="classControl"
+               [matAutocomplete]="className">
+
+        <mat-autocomplete #className="matAutocomplete"
+                          [displayWith]="displayClassFn"
+                          (optionSelected)="onClassSelection($event)">
+          @for (option of filteredClassOptions | async; track option) {
+            <mat-option [value]="option">{{ option.value }} - {{ option.label }}</mat-option>
+          }
+        </mat-autocomplete>
+
+        @if (classControl.value) {
+          <mat-icon matSuffix color="warn"
+                    (click)="classControl.setValue('')">close
+          </mat-icon>
+        }
+      </mat-form-field>
+    </div>
+
       <div class="form-field">
         <mat-form-field appearance="fill">
           <mat-label>SubClass description</mat-label>
@@ -91,32 +118,7 @@
         </mat-form-field>
 
       </div>
-      <div class="form-field">
-        <mat-form-field appearance="fill">
-          <mat-label>Class description</mat-label>
-          <mat-icon matPrefix>search</mat-icon>
-          <input type="text"
-                 placeholder="Type class description"
-                 aria-label="Class description"
-                 matInput
-                 [formControl]="classControl"
-                 [matAutocomplete]="className">
 
-          <mat-autocomplete #className="matAutocomplete"
-                            [displayWith]="displayClassFn"
-                            (optionSelected)="onClassSelection($event)">
-            @for (option of filteredClassOptions | async; track option) {
-              <mat-option [value]="option">{{ option.value }} - {{ option.label }}</mat-option>
-            }
-          </mat-autocomplete>
-
-          @if (classControl.value) {
-            <mat-icon matSuffix color="warn"
-                      (click)="classControl.setValue('')">close
-            </mat-icon>
-          }
-        </mat-form-field>
-      </div>
       <div class="form-field">
         <mat-form-field appearance="fill">
           <mat-label>Account description</mat-label>
@@ -136,7 +138,7 @@
       </div>
 
   </div>
-  <span>Elements found: <strong>{{flattenedDataSource.length}}</strong></span>
+  <span>Elements found: <strong>{{flattenedTableDataSource.filteredData.length}}</strong></span>
   <div class="table-container">
     <table mat-table [dataSource]="flattenedTableDataSource" class="mat-elevation-z8 mat-responsive-table">
 

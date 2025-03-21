@@ -4,7 +4,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInput} from "@angular/material/input";
 import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-import {filter, map, Observable, of, startWith, take, tap} from "rxjs";
+import {filter, map, Observable, of, startWith, take, tap, throttleTime} from "rxjs";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {
   MatAutocomplete,
@@ -19,7 +19,11 @@ import {MatTableDataSource, MatTableModule} from "@angular/material/table";
 import {accTransformed} from "./source/thransformedAccounts";
 import {GetClassColorPipe} from "./utils/get-class-color.pipe";
 import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
+import { FileService } from './service/downloadService';
 
+import {HttpClientModule} from "@angular/common/http";
+
+import {ACCOUNTS_F} from "./source/flatSource";
 
 const FIELD_NAMES = {
   CLASS_DESCRIPTION: 'classDescription',
@@ -48,9 +52,10 @@ interface FlattenedData {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, MatTableModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, ReactiveFormsModule, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton, GetClassColorPipe, MatFabButton],
+  imports: [HttpClientModule,RouterOutlet, MatTableModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, ReactiveFormsModule, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton, GetClassColorPipe, MatFabButton],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
+  providers:[FileService]
 })
 export class AppComponent implements OnInit {
   public accountsFilterForm: FormGroup;
@@ -72,7 +77,7 @@ export class AppComponent implements OnInit {
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
   filteredTableData: FlattenedData[] = [];
-  flattenedDataSource:FlattenedData[] = [];
+  // flattenedDataSource:FlattenedData[] = [];
   flattenedTableDataSource = new MatTableDataSource<FlattenedData,MatPaginator>([]);
   displayedColumns: string[] = [
     'classNumber',
@@ -97,9 +102,9 @@ export class AppComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  constructor() {
+  constructor(private fileService: FileService) {
     this.accountsFilterForm = this.fb.group({
       [FIELD_NAMES.CLASS_DESCRIPTION]: [null],
       [FIELD_NAMES.SUBCLASS_DESCRIPTION]: [null],
@@ -108,88 +113,78 @@ export class AppComponent implements OnInit {
       [FIELD_NAMES.CLASS_NUMBER]: [null],
       [FIELD_NAMES.SUBCLASS_NUMBER]: [null],
     });
-    this.flattenData();
-    // this.flattenedDataSource = this.flattenData();
-    // this.flattenedTableDataSource = new MatTableDataSource(this.flattenData())
   }
 
   ngOnInit(): void {
     this.initializeFilters();
     this.initializeAutocomplete();
-console.log(this.flattenedTableDataSource)
+    this.loadData();
+
     this.filteredClassOptions = this.classControl.valueChanges.pipe(
       startWith(''),
-      map(value => this._filter(this.classOptions, value)),
+      map(value => this._filter(this.classOptions, value))
     );
 
     this.filteredSubClassOptions = this.subClassControl.valueChanges.pipe(
       startWith(''),
-      map(value => this._filter(this.subclassOptions, value)),
+      map(value => this._filter(this.subclassOptions, value))
     );
 
-    this.classControl
-      ?.valueChanges.subscribe((searchedString) => {
+    // 🔹 Class Control Filter
+    this.classControl?.valueChanges.subscribe((searchedString: string | Option | null) => {
+      const searchParam = typeof searchedString === 'object'
+        ? (searchedString as Option)?.label
+        : searchedString;
 
-      if (!searchedString) {
-        // this.flattenData()
-      } else {
-        // @ts-ignore
-        let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
-        this.flattenedDataSource = this.flattenedDataSource.filter(td =>
-          td.classDescription.en.toLowerCase().includes(searchParam?.toLowerCase() ?? '')
-          || td.classDescription.fr.toLowerCase().includes(searchParam?.toLowerCase() ?? ''))
-      }
-
-    })
-
-    this.classControl?.valueChanges.subscribe((searchedString) => {
-
-      if (!searchedString) {
-        // this.flattenData()
-      } else {
-        // Ensure search term is handled correctly
-        //@ts-ignore
-        const searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
-        this.flattenedDataSource.filter = searchParam?.trim().toLowerCase() ?? '';
-      }
-
+      this.updateFilter({ class: searchParam });
     });
 
-    this.subClassControl
-      ?.valueChanges.subscribe((searchedString) => {
+    // 🔹 Subclass Control Filter
+    this.subClassControl?.valueChanges.subscribe((searchedString: string | Option | null) => {
+      const searchParam = typeof searchedString === 'object'
+        ? (searchedString as Option)?.label
+        : searchedString;
 
-      if (!searchedString) {
-// this.flattenData()
-      } else {
-        // @ts-ignore
-        let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
-        this.flattenedDataSource = this.flattenedDataSource.filter(td =>
-          td.subclassDescription.en.toLowerCase().includes(searchParam?.toLowerCase() ?? '')
-          || td.subclassDescription.fr.toLowerCase().includes(searchParam?.toLowerCase() ?? ''))
+      this.updateFilter({ subClass: searchParam });
+    });
+
+    // 🔹 Custom Filter Predicate for Accurate Filtering
+    this.flattenedTableDataSource.filterPredicate = (data: FlattenedData, filter: string): boolean => {
+      let searchTerms;
+
+      // ✅ Safe JSON Parsing
+      try {
+        searchTerms = JSON.parse(filter);
+      } catch (error) {
+        console.error('Invalid JSON filter:', filter);
+        return true; // Show all data if JSON is invalid
       }
 
-    })
-
-    // this.subClassControl?.valueChanges.subscribe((searchedString) => {
-    //   // @ts-ignore
-    //   const searchParam = typeof searchedString === 'object' ? searchedString?.label : searchedString;
-    //   this.updateFilter({ subClass: searchParam });
-    // });
-
-    this.accControl.valueChanges.subscribe((accName) => {
-      if(!accName) {
-        console.log(accName);
-      } else {
-        this.flattenedDataSource = this.flattenedDataSource.filter(td =>
-          td.subclassDescription.en.toLowerCase().includes(accName?.toLowerCase() ?? '')
-          || td.subclassDescription.fr.toLowerCase().includes(accName?.toLowerCase() ?? ''))
+      // ✅ Handle Empty Filters — Show All Data
+      if (!searchTerms.class && !searchTerms.subClass && !searchTerms.acc) {
+        return true;
       }
 
-    })
+      // 🔹 Filter Conditions
+      const classMatch =
+        !searchTerms.class || data.classDescription.en.toLowerCase().includes(searchTerms.class.toLowerCase()) ||
+        data.classDescription.fr.toLowerCase().includes(searchTerms.class.toLowerCase());
 
-    // this.accControl?.valueChanges.subscribe((accName) => {
-    //   this.updateFilter({ acc: accName ?? '' });
-    // });
+      const subClassMatch =
+        !searchTerms.subClass || data.subclassDescription.en.toLowerCase().includes(searchTerms.subClass.toLowerCase()) ||
+        data.subclassDescription.fr.toLowerCase().includes(searchTerms.subClass.toLowerCase());
+
+      const accMatch =
+        !searchTerms.acc || data.accountDescription?.en?.toLowerCase().includes(searchTerms.acc.toLowerCase()) ||
+        data.accountDescription?.fr?.toLowerCase().includes(searchTerms.acc.toLowerCase());
+
+      return Boolean(classMatch && subClassMatch && accMatch);
+    };
+
+    // 🔹 Account Control Filter (Throttle to Reduce Unnecessary Requests)
+    this.accControl?.valueChanges.pipe(throttleTime(600)).subscribe((accName) => {
+      this.updateFilter({ acc: accName ?? '' });
+    });
   }
 
 
@@ -207,7 +202,7 @@ console.log(this.flattenedTableDataSource)
       control?.valueChanges.subscribe((searchedString: Option | string | null) => {
         const searchParam = typeof searchedString === 'object' ? (searchedString as Option)?.label : searchedString;
         if (!searchParam) {
-          this.flattenData();  // Restore the original data
+          // this.flattenData();  // Restore the original data
           return;
         }
 
@@ -228,15 +223,12 @@ console.log(this.flattenedTableDataSource)
     };
   }
 
-  updateFilter(newFilter: Partial<{ classDescription: string; subclassDescription: string; accountDescription: string }>): void {
-    const currentFilter = this.flattenedTableDataSource.filter
-      ? JSON.parse(this.flattenedTableDataSource.filter)
-      : { classDescription: '', subclassDescription: '', accountDescription: '' };
+  updateFilter(newFilter: Partial<{ class: string; subClass: string; acc: string }>): void {
+    const mergedFilter = JSON.stringify({ ...newFilter });
 
-    const mergedFilter = { ...currentFilter, ...newFilter };
-    this.flattenedTableDataSource.filter = JSON.stringify(mergedFilter);
+    console.log('Assigned Filter Value:', mergedFilter);
 
-    console.log('Filtered Data Length:', this.flattenedTableDataSource.filteredData.length);
+    this.flattenedTableDataSource.filter = mergedFilter;
   }
 
   /** ============================
@@ -296,40 +288,10 @@ console.log(this.flattenedTableDataSource)
     }));
   }
 
-  // flattenData() : any[] {
-  //   const accounts: any [] = []
-  //   this.dataSource.classes.forEach(classItem => {
-  //     classItem.subclasses.forEach(subclass => {
-  //       subclass.accounts.forEach(account => {
-  //         accounts.push({
-  //           classNumber: classItem.classNumber,
-  //           classDescription: classItem.classDescription,
-  //           subclassNumber: subclass.subclassNumber,
-  //           subclassDescription: subclass.subclassDescription || {en: 'N/A', fr: 'N/A'},
-  //           accountNumber: account.accountNumber,
-  //           accountDescription: account.accountDescription
-  //         });
-  //       });
-  //     });
-  //   });
-  //   return accounts;
-  // }
-
-  private flattenData(): void {
-    const accounts: any [] = []
-    this.flattenedTableDataSource.data = this.dataSource.classes.flatMap(classItem =>
-      classItem.subclasses.flatMap(subclass =>
-        subclass.accounts.map(account => ({
-          classNumber: classItem.classNumber,
-          classDescription: classItem.classDescription,
-          subclassNumber: subclass.subclassNumber,
-          subclassDescription: subclass.subclassDescription || { en: 'N/A', fr: 'N/A' },
-          accountNumber: account.accountNumber,
-          accountDescription: account.accountDescription
-        }))
-      )
-    );
+  loadData(): void {
+    this.flattenedTableDataSource = new MatTableDataSource<FlattenedData>(ACCOUNTS_F as FlattenedData[]);
   }
+
 
   getSubclassOptions(classId?: string): { value: string, label: string }[] {
     if (!classId) {
@@ -351,4 +313,8 @@ console.log(this.flattenedTableDataSource)
       }));
     }
   }
+
+  // saveFlattenedDataToFile(staticFlattenedData: FlattenedData[]): void {
+  //   this.fileService.saveAsJsonFile(staticFlattenedData, 'flattenedData.json');
+  // }
 }
