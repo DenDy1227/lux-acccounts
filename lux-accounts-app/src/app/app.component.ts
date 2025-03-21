@@ -31,6 +31,11 @@ const FIELD_NAMES = {
 
 } as const
 
+interface Option {
+  value: string;
+  label: string;
+}
+
 interface FlattenedData {
   classNumber: string;
   classDescription: { en: string; fr: string };
@@ -67,7 +72,8 @@ export class AppComponent implements OnInit {
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
   filteredTableData: FlattenedData[] = [];
-
+  flattenedDataSource:FlattenedData[] = [];
+  flattenedTableDataSource = new MatTableDataSource<FlattenedData,MatPaginator>([]);
   displayedColumns: string[] = [
     'classNumber',
     'classDescription',
@@ -77,7 +83,7 @@ export class AppComponent implements OnInit {
     'accountDescription'
   ];
   dataSource = ACCOUNTS;
-  flattenedDataSource:FlattenedData[] = [];
+
 
   showScrollButton = false; // Controls when the button appears
 
@@ -103,10 +109,14 @@ export class AppComponent implements OnInit {
       [FIELD_NAMES.SUBCLASS_NUMBER]: [null],
     });
     this.flattenData();
+    // this.flattenedDataSource = this.flattenData();
+    // this.flattenedTableDataSource = new MatTableDataSource(this.flattenData())
   }
 
   ngOnInit(): void {
-
+    this.initializeFilters();
+    this.initializeAutocomplete();
+console.log(this.flattenedTableDataSource)
     this.filteredClassOptions = this.classControl.valueChanges.pipe(
       startWith(''),
       map(value => this._filter(this.classOptions, value)),
@@ -121,7 +131,7 @@ export class AppComponent implements OnInit {
       ?.valueChanges.subscribe((searchedString) => {
 
       if (!searchedString) {
-        this.flattenData()
+        // this.flattenData()
       } else {
         // @ts-ignore
         let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
@@ -135,7 +145,7 @@ export class AppComponent implements OnInit {
     this.classControl?.valueChanges.subscribe((searchedString) => {
 
       if (!searchedString) {
-        this.flattenData()
+        // this.flattenData()
       } else {
         // Ensure search term is handled correctly
         //@ts-ignore
@@ -149,7 +159,7 @@ export class AppComponent implements OnInit {
       ?.valueChanges.subscribe((searchedString) => {
 
       if (!searchedString) {
-this.flattenData()
+// this.flattenData()
       } else {
         // @ts-ignore
         let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
@@ -180,6 +190,68 @@ this.flattenData()
     // this.accControl?.valueChanges.subscribe((accName) => {
     //   this.updateFilter({ acc: accName ?? '' });
     // });
+  }
+
+
+  /** ============================
+   * 🔹 Unified Filter Logic
+   * ============================ */
+  initializeFilters(): void {
+    const filterControls = [
+      { control: this.classControl, key: 'classDescription' },
+      { control: this.subClassControl, key: 'subclassDescription' },
+      { control: this.accControl, key: 'accountDescription' }
+    ];
+
+    filterControls.forEach(({ control, key }) => {
+      control?.valueChanges.subscribe((searchedString: Option | string | null) => {
+        const searchParam = typeof searchedString === 'object' ? (searchedString as Option)?.label : searchedString;
+        if (!searchParam) {
+          this.flattenData();  // Restore the original data
+          return;
+        }
+
+        this.updateFilter({ [key]: searchParam });
+      });
+    });
+
+    this.flattenedTableDataSource.filterPredicate = (data: FlattenedData, filter: string) => {
+      const searchTerms = JSON.parse(filter);
+      return Boolean((
+        (data.classDescription.en.toLowerCase().includes(searchTerms.classDescription.toLowerCase()) ||
+          data.classDescription.fr.toLowerCase().includes(searchTerms.classDescription.toLowerCase())) &&
+        (data.subclassDescription.en.toLowerCase().includes(searchTerms.subclassDescription.toLowerCase()) ||
+          data.subclassDescription.fr.toLowerCase().includes(searchTerms.subclassDescription.toLowerCase())) &&
+        (data?.accountDescription?.en?.toLowerCase().includes(searchTerms.accountDescription.toLowerCase()) ||
+          data?.accountDescription?.fr?.toLowerCase().includes(searchTerms.accountDescription.toLowerCase()) )
+      ));
+    };
+  }
+
+  updateFilter(newFilter: Partial<{ classDescription: string; subclassDescription: string; accountDescription: string }>): void {
+    const currentFilter = this.flattenedTableDataSource.filter
+      ? JSON.parse(this.flattenedTableDataSource.filter)
+      : { classDescription: '', subclassDescription: '', accountDescription: '' };
+
+    const mergedFilter = { ...currentFilter, ...newFilter };
+    this.flattenedTableDataSource.filter = JSON.stringify(mergedFilter);
+
+    console.log('Filtered Data Length:', this.flattenedTableDataSource.filteredData.length);
+  }
+
+  /** ============================
+   * 🔹 Autocomplete Filter Logic
+   * ============================ */
+  initializeAutocomplete(): void {
+    this.filteredClassOptions = this.classControl.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(this.classOptions, value))
+    );
+
+    this.filteredSubClassOptions = this.subClassControl.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(this.subclassOptions, value))
+    );
   }
 
   displayClassFn(value: { value: string, label: string }): string {
@@ -224,21 +296,39 @@ this.flattenData()
     }));
   }
 
-  flattenData() {
-    this.dataSource.classes.forEach(classItem => {
-      classItem.subclasses.forEach(subclass => {
-        subclass.accounts.forEach(account => {
-          this.flattenedDataSource.push({
-            classNumber: classItem.classNumber,
-            classDescription: classItem.classDescription,
-            subclassNumber: subclass.subclassNumber,
-            subclassDescription: subclass.subclassDescription || {en: 'N/A', fr: 'N/A'},
-            accountNumber: account.accountNumber,
-            accountDescription: account.accountDescription
-          });
-        });
-      });
-    });
+  // flattenData() : any[] {
+  //   const accounts: any [] = []
+  //   this.dataSource.classes.forEach(classItem => {
+  //     classItem.subclasses.forEach(subclass => {
+  //       subclass.accounts.forEach(account => {
+  //         accounts.push({
+  //           classNumber: classItem.classNumber,
+  //           classDescription: classItem.classDescription,
+  //           subclassNumber: subclass.subclassNumber,
+  //           subclassDescription: subclass.subclassDescription || {en: 'N/A', fr: 'N/A'},
+  //           accountNumber: account.accountNumber,
+  //           accountDescription: account.accountDescription
+  //         });
+  //       });
+  //     });
+  //   });
+  //   return accounts;
+  // }
+
+  private flattenData(): void {
+    const accounts: any [] = []
+    this.flattenedTableDataSource.data = this.dataSource.classes.flatMap(classItem =>
+      classItem.subclasses.flatMap(subclass =>
+        subclass.accounts.map(account => ({
+          classNumber: classItem.classNumber,
+          classDescription: classItem.classDescription,
+          subclassNumber: subclass.subclassNumber,
+          subclassDescription: subclass.subclassDescription || { en: 'N/A', fr: 'N/A' },
+          accountNumber: account.accountNumber,
+          accountDescription: account.accountDescription
+        }))
+      )
+    );
   }
 
   getSubclassOptions(classId?: string): { value: string, label: string }[] {
