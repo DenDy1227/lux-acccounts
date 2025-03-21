@@ -84,8 +84,8 @@
             }
           </mat-autocomplete>
 
-          @if (this.getFormFieldValue(formControlName.SUBCLASS_DESCRIPTION)) {
-            <mat-icon matSuffix color="warn" (click)="this.clearFormField(formControlName.SUBCLASS_DESCRIPTION)">close
+          @if (subClassControl.value) {
+            <mat-icon matSuffix color="warn" (click)="subClassControl.setValue('')">close
             </mat-icon>
           }
         </mat-form-field>
@@ -103,15 +103,16 @@
                  [matAutocomplete]="className">
 
           <mat-autocomplete #className="matAutocomplete"
+                            [displayWith]="displayClassFn"
                             (optionSelected)="onClassSelection($event)">
             @for (option of filteredClassOptions | async; track option) {
               <mat-option [value]="option">{{ option.value }} - {{ option.label }}</mat-option>
             }
           </mat-autocomplete>
 
-          @if (getFormFieldValue(formControlName.CLASS_DESCRIPTION)) {
+          @if (classControl.value) {
             <mat-icon matSuffix color="warn"
-                      (click)="clearFormField(formControlName.CLASS_DESCRIPTION)">close
+                      (click)="classControl.setValue('')">close
             </mat-icon>
           }
         </mat-form-field>
@@ -126,9 +127,9 @@
                  matInput
                  [formControl]="accControl">
 
-          @if (getFormFieldValue(formControlName.DESCRIPTION)) {
+          @if (accControl.value) {
             <mat-icon matSuffix color="warn"
-                      (click)="clearFormField(formControlName.DESCRIPTION)">close
+                      (click)="accControl.setValue('')">close
             </mat-icon>
           }
         </mat-form-field>

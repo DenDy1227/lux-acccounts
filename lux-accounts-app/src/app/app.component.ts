@@ -119,30 +119,45 @@ export class AppComponent implements OnInit {
 
     this.classControl
       ?.valueChanges.subscribe((searchedString) => {
-      // @ts-ignore
-      let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
-      this.flattenedDataSource = this.flattenedDataSource.filter(td =>
-        td.classDescription.en.toLowerCase().includes(searchParam?.toLowerCase() ?? '')
-        || td.classDescription.fr.toLowerCase().includes(searchParam?.toLowerCase() ?? ''))
+
+      if (!searchedString) {
+        this.flattenData()
+      } else {
+        // @ts-ignore
+        let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
+        this.flattenedDataSource = this.flattenedDataSource.filter(td =>
+          td.classDescription.en.toLowerCase().includes(searchParam?.toLowerCase() ?? '')
+          || td.classDescription.fr.toLowerCase().includes(searchParam?.toLowerCase() ?? ''))
+      }
+
     })
 
     this.classControl?.valueChanges.subscribe((searchedString) => {
-      // Ensure search term is handled correctly
-      //@ts-ignore
-      const searchParam = typeof searchedString === 'object' ? searchedString?.label : searchedString;
 
-      // Apply filter logic directly on MatTableDataSource
-      this.flattenedDataSource.filter = searchParam?.trim().toLowerCase() ?? '';
+      if (!searchedString) {
+        this.flattenData()
+      } else {
+        // Ensure search term is handled correctly
+        //@ts-ignore
+        const searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
+        this.flattenedDataSource.filter = searchParam?.trim().toLowerCase() ?? '';
+      }
+
     });
 
     this.subClassControl
       ?.valueChanges.subscribe((searchedString) => {
-      // @ts-ignore
-      let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
 
-      this.flattenedDataSource = this.flattenedDataSource.filter(td =>
-        td.subclassDescription.en.toLowerCase().includes(searchParam?.toLowerCase() ?? '')
-        || td.subclassDescription.fr.toLowerCase().includes(searchParam?.toLowerCase() ?? ''))
+      if (!searchedString) {
+this.flattenData()
+      } else {
+        // @ts-ignore
+        let searchParam = typeof searchedString==='object' ? searchedString?.label:searchedString;
+        this.flattenedDataSource = this.flattenedDataSource.filter(td =>
+          td.subclassDescription.en.toLowerCase().includes(searchParam?.toLowerCase() ?? '')
+          || td.subclassDescription.fr.toLowerCase().includes(searchParam?.toLowerCase() ?? ''))
+      }
+
     })
 
     // this.subClassControl?.valueChanges.subscribe((searchedString) => {
@@ -152,9 +167,14 @@ export class AppComponent implements OnInit {
     // });
 
     this.accControl.valueChanges.subscribe((accName) => {
-      this.flattenedDataSource = this.flattenedDataSource.filter(td =>
-        td.subclassDescription.en.toLowerCase().includes(accName?.toLowerCase() ?? '')
-        || td.subclassDescription.fr.toLowerCase().includes(accName?.toLowerCase() ?? ''))
+      if(!accName) {
+        console.log(accName);
+      } else {
+        this.flattenedDataSource = this.flattenedDataSource.filter(td =>
+          td.subclassDescription.en.toLowerCase().includes(accName?.toLowerCase() ?? '')
+          || td.subclassDescription.fr.toLowerCase().includes(accName?.toLowerCase() ?? ''))
+      }
+
     })
 
     // this.accControl?.valueChanges.subscribe((accName) => {
@@ -163,7 +183,7 @@ export class AppComponent implements OnInit {
   }
 
   displayClassFn(value: { value: string, label: string }): string {
-    return value ? `${value.value} - ${value.label}`:'';
+    return typeof value === 'object' ? `${value.value} - ${value.label}`:'';
   }
 
   clearFormField(fieldName: string, emitEvent: boolean = true): void {
@@ -175,10 +195,12 @@ export class AppComponent implements OnInit {
   }
 
   public onClassSelection(selectClassEvent: MatAutocompleteSelectedEvent): void {
+    this.accountsFilterForm.get(FIELD_NAMES.CLASS_DESCRIPTION)?.setValue(selectClassEvent.option.value.value)
     this.subclassOptions = this.getSubclassOptions(selectClassEvent.option.value.value);
   }
 
   public onSubClassSelection(selectClassEvent: MatAutocompleteSelectedEvent): void {
+    this.accountsFilterForm.get(FIELD_NAMES.SUBCLASS_DESCRIPTION)?.setValue(selectClassEvent.option.value.value)
   }
 
   private _filter(source: { value: string, label: string }[], value: string | null | {
