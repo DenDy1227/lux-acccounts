@@ -59,12 +59,7 @@
 
 <main class="main">
   <div class="content">
-<div class="lang-btns">
-  <mat-button-toggle-group hideSingleSelectionIndicator [(ngModel)]="languageSelected" name="fontStyle" aria-label="Font Style">
-    <mat-button-toggle value="en"><span class="fi fi-gb fis"></span></mat-button-toggle>
-    <mat-button-toggle value="fr"><span class="fi fi-fr fis"></span></mat-button-toggle>
-  </mat-button-toggle-group>
-</div>
+
     <div class="form-field">
       <mat-form-field appearance="fill">
         <mat-label>Class description</mat-label>
@@ -194,7 +189,12 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 
     </table>
-
+    <div class="lang-btns">
+      <mat-button-toggle-group hideSingleSelectionIndicator [(ngModel)]="languageSelected" name="fontStyle" aria-label="Font Style">
+        <mat-button-toggle value="en"><span class="fi fi-gb fis"></span></mat-button-toggle>
+        <mat-button-toggle value="fr"><span class="fi fi-fr fis"></span></mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
     <button mat-fab
             class="scroll-to-top"
             (click)="scrollToTop()"
