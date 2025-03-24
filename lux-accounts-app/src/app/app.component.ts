@@ -120,16 +120,16 @@ export class AppComponent implements OnInit {
 
       // 🔹 Filter Conditions
       const classMatch =
-        !searchTerms.class || data.classDescription.en.toLowerCase().includes(searchTerms.class.toLowerCase()) ||
-        data.classDescription.fr.toLowerCase().includes(searchTerms.class.toLowerCase());
+        !searchTerms.class || data.classDescription.en.toLowerCase().includes(searchTerms.class.trim().toLowerCase()) ||
+        data.classDescription.fr.toLowerCase().includes(searchTerms.class.trim().toLowerCase());
 
       const subClassMatch =
-        !searchTerms.subClass || data.subclassDescription.en.toLowerCase().includes(searchTerms.subClass.toLowerCase()) ||
-        data.subclassDescription.fr.toLowerCase().includes(searchTerms.subClass.toLowerCase());
+        !searchTerms.subClass || data.subclassDescription.en.toLowerCase().includes(searchTerms.subClass.trim().toLowerCase()) ||
+        data.subclassDescription.fr.toLowerCase().includes(searchTerms.subClass.trim().toLowerCase());
 
       const accMatch =
-        !searchTerms.acc || data.accountDescription?.en?.toLowerCase().includes(searchTerms.acc.toLowerCase()) ||
-        data.accountDescription?.fr?.toLowerCase().includes(searchTerms.acc.toLowerCase());
+        !searchTerms.acc || data.accountDescription?.en?.toLowerCase().includes(searchTerms.acc.trim().toLowerCase()) ||
+        data.accountDescription?.fr?.toLowerCase().includes(searchTerms.acc.trim().toLowerCase());
 
       return Boolean(classMatch && subClassMatch && accMatch);
     };

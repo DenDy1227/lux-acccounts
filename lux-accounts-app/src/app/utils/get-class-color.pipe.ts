@@ -7,7 +7,6 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class GetClassColorPipe implements PipeTransform {
 
   transform(classNumber: string, ...args: unknown[]): unknown {
-    console.log(typeof classNumber)
     switch (classNumber) {
       case "1" : {
         return 'first'
@@ -33,5 +32,4 @@ export class GetClassColorPipe implements PipeTransform {
       default : return 'default'
     }
   }
-
 }
