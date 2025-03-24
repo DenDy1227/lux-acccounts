@@ -94,6 +94,7 @@
             ],
             "styles": [
               "@angular/material/prebuilt-themes/azure-blue.css",
+              "node_modules/flag-icon-css/css/flag-icon.min.scss",
               "src/styles.scss"
             ],
             "scripts": []

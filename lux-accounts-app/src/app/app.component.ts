@@ -1,10 +1,10 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, HostListener, OnInit} from '@angular/core';
 import {RouterOutlet} from '@angular/router';
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInput} from "@angular/material/input";
-import {FormControl, ReactiveFormsModule} from "@angular/forms";
-import {map, Observable, startWith, throttleTime} from "rxjs";
+import {FormControl, FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {distinctUntilChanged, map, Observable, startWith} from "rxjs";
 
 import {
   MatAutocomplete,
@@ -16,11 +16,11 @@ import {CommonModule} from "@angular/common";
 import {MatFabButton, MatIconButton} from "@angular/material/button";
 import {MatTableDataSource, MatTableModule} from "@angular/material/table";
 import {GetClassColorPipe} from "./utils/get-class-color.pipe";
-import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
 
 import {ACCOUNTS_F} from "./source/flatSource";
 import {subClassOptions} from "./source/subClassOptions";
 import {classOption} from "./source/classOptions";
+import {MatButtonToggleModule} from "@angular/material/button-toggle";
 
 interface Option {
   value: string;
@@ -39,7 +39,7 @@ interface FlattenedData {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, MatTableModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton, GetClassColorPipe, MatFabButton, ReactiveFormsModule, MatPaginatorModule, MatPaginator],
+  imports: [RouterOutlet, MatTableModule, MatButtonToggleModule, CommonModule, MatFormFieldModule, MatIconModule, MatInput, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatIconButton, GetClassColorPipe, MatFabButton, ReactiveFormsModule, FormsModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
@@ -54,9 +54,19 @@ export class AppComponent implements OnInit {
   filteredClassOptions!: Observable<{ value: string, label: string }[]>;
   filteredSubClassOptions!: Observable<{ value: string, label: string }[]>;
 
+  languageSelected: 'en' | 'fr' = 'en';
+  public showScrollButton = false;
   // private destroyRef = inject(DestroyRef);
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    this.showScrollButton = window.scrollY > 300;
+  }
 
-  flattenedTableDataSource = new MatTableDataSource<FlattenedData,MatPaginator>([]);
+  scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  flattenedTableDataSource = new MatTableDataSource<FlattenedData>([]);
   displayedColumns: string[] = [
     'classNumber',
     'classDescription',
@@ -65,8 +75,6 @@ export class AppComponent implements OnInit {
     'accountNumber',
     'accountDescription'
   ];
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ngOnInit(): void {
     this.initializeFilters();
@@ -135,13 +143,9 @@ export class AppComponent implements OnInit {
     };
 
     // 🔹 Account Control Filter (Throttle to Reduce Unnecessary Requests)
-    this.accControl?.valueChanges.pipe(throttleTime(600)).subscribe((accName) => {
+    this.accControl?.valueChanges.pipe(distinctUntilChanged()).subscribe((accName) => {
       this.updateFilter({ acc: accName ?? '' });
     });
-  }
-
-  ngAfterViewInit(): void {
-    this.flattenedTableDataSource.paginator = this.paginator;
   }
 
   /** ============================
